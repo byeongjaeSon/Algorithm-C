@@ -1,25 +1,29 @@
 #include <iostream>
+#include <vector>
+#include <algorithm>
+#include <cstring>
 using namespace std;
 
-bool match(string& W, string& fileName, int w, int s)
+int cache[101][101];
+
+string W, S;
+
+bool matchMemoized(int w, int s)
 {
-	// base case;
-	if ( w == W.length() && s == fileName.length() ) return true;
-	else if ( w < W.length() && s >= fileName.length() )
+	int& ret = cache[w][s];
+	if ( ret != -1 ) return ret;
+
+	if ( s < S.size() && w < W.size() && (W[w] == '?' || W[w] == S[s]) )
+		return ret = matchMemoized(w + 1, s + 1);
+
+	if ( w == W.size() ) return ret = (s == S.size());
+
+	if ( W[w] == '*' )
 	{
-		for ( int i = w; i < W.length(); i++ )
-			if ( W[i] != '*' ) return false;
-		return true;
+		if ( matchMemoized(w + 1, s) || (s < S.size() && matchMemoized(w, s + 1)) )
+			return ret = 1;
 	}
-
-	if ( W[w] != '*' )
-	{
-		if ( W[w] == '?' || W[w] == fileName[s] ) return match(W, fileName, w + 1, s + 1);
-		else return false;
-	}
-
-	else return (match(W, fileName, w + 1, s + 1) || match(W, fileName, w, s + 1));
-
+	return ret = 0;
 }
 
 int main()
@@ -28,15 +32,17 @@ int main()
 	cin >> C;
 	while ( C-- )
 	{
-		string W;
 		int n;
 		cin >> W >> n;
+		vector<string> answers;
 		for ( int i = 0; i < n; i++ )
 		{
-			string fileName;
-			cin >> fileName;
-			if ( match(W, fileName, 0, 0) ) cout << fileName << endl;
+			cin >> S;
+			memset(cache, -1, sizeof(cache));
+			if ( matchMemoized(0, 0) ) answers.push_back(S);
 		}
+		sort(answers.begin(), answers.end());
+		for ( string answer : answers ) cout << answer << '\n';
 	}
 	return 0;
 }
