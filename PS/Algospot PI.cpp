@@ -1,75 +1,57 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
+#include <string>
 #include <cstring>
+#include <algorithm>
+#include <cmath>
 using namespace std;
 
-int cache[10000];
 const int INF = 987654321;
-string text;
+string N;
 
-bool isAllSameNumber(const string& S)
+// N[a..b] 구간의 난이도를 반환한다.
+int classify(int a, int b)
 {
-	for ( int i = 0; i + 1 < S.length(); i++ )
-		if ( S[i + 1] != S[i] ) return false;
-	return true;
+	// 숫자 조각을 가져온다.
+	string M = N.substr(a, b - a + 1);
+	// 첫 글자만으로 이루어진 문자열과 같으면 난이도는 1
+	if ( M == string(M.size(), M[0]) ) return 1;
+	// 등차수열인지 검사한다.
+	bool progressive = true;
+	for ( int i = 0; i < M.size() - 1; ++i )
+		if ( M[i + 1] - M[i] != M[1] - M[0] )
+			progressive = false;
+
+	// 등차수열이고 공차가 1 혹은 -1이면 난이도는 2
+	if ( progressive && abs(M[1] - M[0]) == 1 )
+		return 2;
+
+	// 두 수가 번갈아 등장하는지 확인한다.
+	bool alternating = true;
+	for ( int i = 0; i < M.size(); ++i )
+		if ( M[i] != M[i % 2] )
+			alternating = false;
+
+	if ( alternating ) return 4; // 두 수가 번갈아 등장하면 난이도는 4
+	if ( progressive ) return 5; // 공차가 1아닌 등차수열의 난이도는 5
+	return 10; // 이 외는 모두 난이도 10
+
 }
 
-bool isMonotonousChange(const string& S)
+int cache[10002];
+// 수열 N[begin...]을 외우는 방법 중 난이도의 최소 합을 출력한다.
+int memorize(int begin)
 {
-	int standard = S[1] - S[0];
-	if ( S[1] > S[0] )
-	{
-		for ( int i = 1; i < S.length(); i++ )
-			if ( S[i] - S[i-1] != 1 ) return false;
-	}
-	else 
-	{
-		for ( int i = 1; i < S.length(); i++ )
-			if ( S[i] - S[i-1] != -1 ) return false;
-	}
-	
-	return true;
-}
+	// 기저사례 : 수열의 끝에 도달했을 경우
+	if ( begin == N.size() ) return 0;
+	// 메모이제이션
+	int& ret = cache[begin];
+	if ( ret != -1 ) return ret;
 
-bool doTakenTurns(const string& S)
-{
-	for ( int i = 0; i + 2 < S.length(); i += 2 )
-		if ( S[i + 2] != S[i] ) return false;
-	for ( int i = 1; i + 2 < S.length(); i += 2 )
-		if ( S[i + 2] != S[i] ) return false;
-	return true;
-}
-
-bool isArithmeticalSequence(const string& S)
-{
-	int standard = S[1] - S[0];
-	for ( int i = 1; i + 1 < S.length(); i++ )
-		if ( S[i + 1] - S[i] != standard ) return false;
-	return true;
-}
-
-int calDifficulty(const string& S)
-{
-	int difficulty = 0;
-	if ( isAllSameNumber(S) ) difficulty = 1;
-	else if ( isMonotonousChange(S) ) difficulty = 2;
-	else if ( doTakenTurns(S) ) difficulty = 4;
-	else if ( isArithmeticalSequence(S) ) difficulty = 5;
-	else difficulty = 10;
-
-	return difficulty;
-}
-
-// solve(start) : start부터 시작하는 text 난이도의 최솟값.
-int solve(int start)
-{
-	if ( text.length() - start <= 2 ) return INF;
-	if ( text.length() - start <= 5 ) return calDifficulty(text.substr(start, text.length() - start));
-
-	int& ret = cache[start];
-	if ( ret != INF ) return ret;
-
-	for ( int delta = 3; delta <= 5; delta++ )
-		ret = min(ret, calDifficulty(text.substr(start,delta)) + solve(start + delta));
+	ret = INF;
+	for ( int L = 3; L <= 5; ++L )
+		if ( begin + L <= N.size() )
+			ret = min(ret, memorize(begin + L) + classify(begin, begin + L - 1));
 
 	return ret;
 }
@@ -77,14 +59,13 @@ int solve(int start)
 
 int main()
 {
-	int C;
-	cin >> C;
-	while ( C-- )
+	//freopen("input.txt", "r", stdin);
+	int c;
+	cin >> c;
+	while ( c-- )
 	{
-		for ( int i = 0; i < 10000; i++ )
-			cache[i] = INF;
-		cin >> text;
-		cout << solve(0) << '\n';
+		memset(cache, -1, sizeof(cache));
+		cin >> N;
+		cout << memorize(0) << '\n';
 	}
-	return 0;
 }
