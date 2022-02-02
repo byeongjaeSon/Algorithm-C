@@ -1,92 +1,65 @@
 #include <iostream>
 #include <cstring>
+#include <vector>
 #include <iomanip>
 using namespace std;
 
-int A[51][51];
-int cntOfConnected[51];
-double** initial_pos;
-double** transition_matrix;
-int N, D, P, T;
+double cache[101][50];
+int adjCnt[50];
+int adjMtx[50][50];
+int n, d, p, t, q;
 
-void init_function()
+void predict(int day)
 {
-	memset(cntOfConnected, 0, sizeof(cntOfConnected));
+	if ( day == d+1 ) return;
 
-	for ( int i = 0; i < N; i++ )
+	for ( int from = 0; from < n; from++ )
 	{
-		for ( int j = 0; j < N; j++ )
+		for ( int to = 0; to < n; to++ )
 		{
-			cin >> A[i][j];
-			if ( A[i][j] == 1 ) cntOfConnected[i]++;
+			if ( cache[day - 1][from] > 0 && adjMtx[from][to] == 1 )
+				cache[day][to] += (1.0 / adjCnt[from]) * cache[day - 1][from];
 		}
 	}
 
-	initial_pos = new double* [1];
-	initial_pos[0] = new double[N] { 0 };
-	initial_pos[0][P] = 1;
-
-	transition_matrix = new double* [N];
-	for ( int i = 0; i < N; ++i )
-		transition_matrix[i] = new double[N] {0};
-
-	for ( int i = 0; i < N; i++ )
-		for ( int j = 0; j < N; j++ )
-			if ( A[i][j] == 1 ) transition_matrix[i][j] = 1.0 / cntOfConnected[i];
+	predict(day + 1);
 }
 
-void copyMatrix(double** m1, double** m2, int N)
-{
-	for ( int i = 0; i < N; i++ )
-		for ( int j = 0; j < N; j++ )
-			m1[i][j] = m2[i][j];
-}
-
-double** multiplyMatrix(double** m1, int row1, int col1, double** m2, int row2, int col2)
-{
-	if ( col1 != row2 )
-		return nullptr;
-
-	double** ret = new double* [row1];
-	for ( int i = 0; i < row1; ++i )
-	{
-		ret[i] = new double[col2] {0};
-	}
-
-	int i, j, k;
-
-	for ( i = 0; i < row1; i++ )
-		for ( j = 0; j < col2; j++ )
-			for ( k = 0; k < col1; k++ )
-				ret[i][j] += m1[i][k] * m2[k][j];
-
-	return ret;
-}
 
 int main()
 {
-	int C;
-	cin >> C;
-	while ( C-- )
-	{
-		cin >> N >> D >> P;
-		init_function();
-		double** ret = new double* [N];
-		for ( int i = 0; i < N; ++i )
-			ret[i] = new double[N] {0};
-		
-		copyMatrix(ret, transition_matrix, N);
-		for ( int i = 0; i < D-1; i++ )
-			copyMatrix(ret, multiplyMatrix(ret, N, N, transition_matrix, N, N), N);
-			
-		ret = multiplyMatrix(initial_pos, 1, N, ret, N, N);
+	int c;
+	cin >> c;
+	while ( c-- )
+	{	
+		memset(cache, 0, sizeof(cache));
+		memset(adjCnt, 0, sizeof(adjCnt));
+		memset(adjMtx, 0, sizeof(adjMtx));
 
-		cin >> T;
-		for ( int i = 0; i < T; i++ )
+		cin >> n >> d >> p;
+		for ( int i = 0; i < n; i++ )
+			for ( int j = 0; j < n; j++ )
+			{
+				cin >> adjMtx[i][j];
+				if ( adjMtx[i][j] == 1 ) adjCnt[i]++;
+			}
+
+
+		for ( int i = 0; i < n; i++ )
 		{
-			int town;
-			cin >> town;
-			cout << fixed << setprecision(8) << ret[0][town] << ' ';
+			if ( adjMtx[p][i] == 1 )
+				cache[1][i] += adjCnt[p] != 0 ? (1.0 / adjCnt[p]) : 0;
+		}
+
+		predict(2);
+
+		cin >> t;
+		cout << fixed;
+		cout.precision(8);
+		for ( int i = 0; i < t; i++ )
+		{
+			cin >> q;
+			cout << cache[d][q] << ' ';
 		}
 		cout << '\n';
 	}
