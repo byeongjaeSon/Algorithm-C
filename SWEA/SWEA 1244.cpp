@@ -1,34 +1,43 @@
 #include <iostream>
 #include <string>
-#include <vector>
 #include <algorithm>
-#include <cmath>
 using namespace std;
 
-int solve(int cnt, int n, vector<int>& nums)
-{
-	int size = nums.size();
+int cnt;
+string ret;
 
-	if ( cnt == n )
+void solve(int pos, int cnt_, int n, string& number)
+{
+	int len = number.length();
+
+	if ( pos == number.length() || cnt_ == n )
 	{
-		int num = 0;
-		for ( int i = 0; i < size; i++ )
-			num += nums[i] * pow(10, size - i - 1);
-		return num;
+		if ( number > ret )
+		{
+			ret = number;
+			cnt = cnt_;
+		}
+		return;
 	}
 
-	int ret = -1;
-	for ( int i = 0; i < size; i++ )
+	int largest = pos;
+	for ( int i = pos + 1; i < len; i++ )
+		if ( number[largest] < number[i] ) largest = i;
+
+	if ( largest == pos )
+		solve(pos + 1, cnt_, n, number);
+	else
 	{
-		for ( int j = i + 1; j < size; j++ )
+		for ( int i = pos + 1; i < len; i++ )
 		{
-			swap(nums[i], nums[j]);
-			int candi = solve(cnt + 1, n, nums);
-			ret = max(ret, candi);
-			swap(nums[i], nums[j]);
+			if ( number[i] == number[largest] )
+			{
+				swap(number[pos], number[i]);
+				solve(pos + 1, cnt_ + 1, n, number);
+				swap(number[i], number[pos]);
+			}
 		}
 	}
-	return ret;
 }
 
 int main()
@@ -37,57 +46,29 @@ int main()
 	cin.tie(0);
 	cout.tie(0);
 
-	int t;
+	int t, n;
 	cin >> t;
 	for ( int tc = 1; tc <= t; tc++ )
 	{
+		ret = "0"; cnt = 0;
 		string number;
-		cin >> number;
+		cin >> number >> n;
+		int len = number.length();
 		
-		int n;
-		cin >> n;
-
-		if ( number.length() == 1 )
+		solve(0, 0, n, number);
+		
+		int remain = n - cnt;
+		if ( remain > 0 && remain & 1 && len > 1 )
 		{
-			cout << "#" << tc << " " << number << '\n';
-			continue;
+			bool duplicate = false;
+			for ( int i = 0; i < len; ++i )
+				for ( int j = i + 1; j < len; ++j )
+					if ( number[i] == number[j] ) duplicate = true;
+
+			if ( !duplicate )
+				swap(ret[len - 1], ret[len - 2]);
 		}
-		
-		
 
-		vector<int> nums;
-		for ( int i = 0; i < number.size(); i++ )
-			nums.push_back(number[i] - '0');
-
-
-		int ret = 0;
-
-		if ( nums.size()-1 <= n )
-		{
-			sort(nums.begin(), nums.end(), greater<>());
-
-			if ( (n - nums.size() - 1) & 1 )
-			{
-				bool duplicate = false;
-				for ( int i = 0; i < nums.size(); i++ )
-				{
-					for ( int j = i + 1; j < nums.size(); j++ )
-					{
-						if ( nums[i] == nums[j] )
-						{
-							duplicate = true;
-							break;
-						}
-					}
-				}
-				if ( !duplicate ) swap(nums[nums.size() - 1], nums[nums.size() - 2]);
-			}
-			ret = solve(0, 0, nums);
-		}
-		else
-			ret = solve(0, n, nums);
-
-		if ( ret == -1 ) ret = stoi(number);
 		cout << "#" << tc << " " << ret << '\n';
 	}
 	return 0;
