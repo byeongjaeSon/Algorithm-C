@@ -1,67 +1,72 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include<iostream>
-#include<vector>
-#include<utility>
+#include <iostream>
+#include <vector>
+#include <cstring>
 using namespace std;
 
 vector<vector<int>> adjList;
-int V, E, v1, v2;
-int commonAncestor = 0, num = 0;
+int height[10001];
+int treeSize[10001];
+int parent[10001];
 
-pair<bool, int> searchTree(int root)
+int dfs(int v, int h)
 {
-	if ( adjList[root].empty() )
-		return make_pair((v1 == root || v2 == root), 1);
-	else if ( adjList[root].size() == 1 )
-	{
-		pair<bool, int> ret = searchTree(adjList[root][0]);
-		if ( ret.second == -1 ) return make_pair(true, -1);
-		return make_pair((ret.first || v1 == root || v2 == root), ret.second + 1);
-	}
-	else
-	{
-		pair<bool, int> ret1 = searchTree(adjList[root][0]);
-		pair<bool, int> ret2 = searchTree(adjList[root][1]);
-		if ( ret1.second == -1 || ret2.second == -1 ) return make_pair(true, -1);
+	height[v] = h;
 
-		if ( (ret1.first && ret2.first))
-		{
-			commonAncestor = root;
-			num = ret1.second + ret2.second + 1;
-			return make_pair(true, -1);
-		}
-		else
-			return make_pair((ret1.first || ret2.first || v1 == root || v2 == root), ret1.second + ret2.second + 1);
-	}
+	int tSize = 1;
+	for ( int& next : adjList[v] )
+		tSize += dfs(next, h + 1);
+
+	return treeSize[v] = tSize;
 }
 
-int main(int argc, char** argv)
+int lca(int v, int u)
+{
+	if ( height[v] > height[u] )
+		while ( height[v] != height[u] ) v = parent[v];
+	else if ( height[v] < height[u] )
+		while ( height[v] != height[u] ) u = parent[u];
+
+	while ( v != u )
+	{
+		v = parent[v];
+		u = parent[u];
+	}
+
+	return v;
+}
+
+int main()
 {
 	ios::sync_with_stdio(false);
-	cin.tie(NULL);
-	cout.tie(NULL);
+	cin.tie(0);
+	cout.tie(0);
 
-	int test_case;
-	int T;
-	
-	//freopen("input.txt", "r", stdin);
-	cin >> T;
-	
-	for ( test_case = 1; test_case <= T; ++test_case )
+	int t;
+	cin >> t;
+	for ( int tc = 1; tc <= t; ++tc )
 	{
-		
+		memset(height, 0, sizeof(height));
+		memset(treeSize, 0, sizeof(treeSize));
+		memset(parent, 0, sizeof(parent));
+		int V, E, v1, v2;
 		cin >> V >> E >> v1 >> v2;
-		adjList = vector<vector<int>>(V+1);
+		adjList = vector<vector<int>>(V+1, vector<int>(0));
+
+		int p, c;
 		for ( int i = 0; i < E; i++ )
 		{
-			int parent, child;
-			cin >> parent >> child;
-			adjList[parent].push_back(child);
+			cin >> p >> c;
+			adjList[p].push_back(c);
+			parent[c] = p;
 		}
 
-		commonAncestor = 0, num = 0;
-		searchTree(1);
-		cout << "#" << test_case << " " << commonAncestor << " " << num << '\n';
+		dfs(1, 0);
+
+		int vertex = lca(v1, v2);
+
+		cout << "#" << tc << " " << vertex << " " << treeSize[vertex] << '\n';
+
 	}
-	return 0;//정상종료시 반드시 0을 리턴해야합니다.
+	return 0;
 }
