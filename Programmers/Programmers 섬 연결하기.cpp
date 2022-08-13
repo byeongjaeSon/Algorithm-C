@@ -18,12 +18,10 @@ struct cmp {
     }
 };
 
-int findSet(int v)
-{
-	if (parent[v] == v) return v;
-	else return findSet(parent[v]);
+int findSet(int v) {    
+	if (parent[v] != v) return parent[v] = findSet(parent[v]);
+	else return v;
 }
-
 
 int solution(int n, vector<vector<int>> costs) {
     
