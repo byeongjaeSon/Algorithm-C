@@ -24,14 +24,10 @@ int solution(int m, int n, vector<string> board) {
                 }
                 if (!isMatch) continue;
                 
-                if (s.find({i,j}) == s.end()) {
-                    s.insert({i,j});
-                }
+                s.insert({i,j});
                 
                 for (pair<int,int>& p : cmp_candidates) {
-                    if (s.find(p) == s.end()){
-                        s.insert(p);
-                    }
+                    s.insert(p);
                 } 
             }
         }
@@ -53,3 +49,4 @@ int solution(int m, int n, vector<string> board) {
     
     return answer;
 }
+
